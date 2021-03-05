@@ -45,11 +45,15 @@ func ListPage(query Query) (Page, error) {
 	if err != nil {
 		return Page{}, err
 	}
+	if len(list) <= 0 {
+		list = make([]EasySpanDO, 0, 0)
+	}
 	pageRes := Page{
 		Total:       count,
 		List:        list,
 		CurrentPage: query.PageNo,
 	}
+	fmt.Println(pageRes)
 	return pageRes, nil
 }
 
@@ -122,10 +126,19 @@ func toTree(node EasySpanDO, childMap map[string][]EasySpanDO, deepth int) TreeN
 var emptySpanNode = make([]TreeNode, 0)
 
 func parseTreeNode(it EasySpanDO) TreeNode {
+	timeFmt := "15:04:05.000"
+	startSec := it.StartTime / 1000
+	startNSec := (it.StartTime % 1000) * 1000000
+
+	finishSec := it.FinishTime / 1000
+	finishNSec := (it.FinishTime % 1000) * 1000000
+
 	tree := TreeNode{
-		ElapsedTime:  it.FinishTime - it.StartTime,
-		Children:     emptySpanNode,
-		ShowChildren: true,
+		ElapsedTime:    it.FinishTime - it.StartTime,
+		Children:       emptySpanNode,
+		ShowChildren:   true,
+		StartTimeText:  time.Unix(startSec, startNSec).Format(timeFmt),
+		FinishTimeText: time.Unix(finishSec, finishNSec).Format(timeFmt),
 	}
 	tree.OperationName = it.OperationName
 	tree.StartTime = it.StartTime
