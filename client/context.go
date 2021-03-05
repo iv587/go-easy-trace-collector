@@ -134,7 +134,7 @@ func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, 
 		if bodyLen <= 0 {
 			if bBuff.Len() >= 8 {
 				binary.Read(bytes.NewReader(bBuff.Next(4)), binary.BigEndian, &msgSign)
-				if msgSign != typeHeartbeat && msgSign != typeHeartbeat && msgSign != typeHeartbeatRes {
+				if msgSign != typeSpan && msgSign != typeHeartbeat && msgSign != typeHeartbeatRes {
 					continue
 				}
 				var lenTmp int32
