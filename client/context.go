@@ -96,7 +96,6 @@ func (c *Context) recvData() {
 	msgBodyList := make([]Packet, 0, 10)
 	for c.running {
 		n, err := r.Read(body)
-		c.conn.Write(pongBytes)
 		if err != nil {
 			return
 		}
