@@ -15,9 +15,9 @@ func buildSpan(bSpan []byte) (easytrace.EasySpan, error) {
 	return easySpan, nil
 }
 
-func Process(msg Msg) {
-	span, err := buildSpan(msg.Body)
-	var isErr int = 0
+func Process(body []byte) {
+	span, err := buildSpan(body)
+	var isErr = 0
 	if span.Error {
 		isErr = 1
 	}

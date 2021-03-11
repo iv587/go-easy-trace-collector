@@ -1,8 +1,8 @@
 package server
 
 import (
+	"collector/client"
 	"collector/config"
-	"collector/connection"
 	"net"
 )
 
@@ -18,6 +18,6 @@ func Boot() error {
 		if err != nil {
 			return err
 		}
-		connection.Create(conn)
+		client.Create(conn)
 	}
 }

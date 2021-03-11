@@ -1,7 +1,7 @@
 package api
 
 import (
-	"collector/connection"
+	"collector/client"
 	"collector/span"
 	"github.com/gin-gonic/gin"
 	"strconv"
@@ -49,6 +49,23 @@ func (t *Trace) getSpanById(c *gin.Context) {
 }
 
 func (t *Trace) getApp(c *gin.Context) {
-	list := connection.ParseApp()
-	succ(c, "", list)
+	groupApp := client.GroupApp()
+	groupAppList := make([]GroupAppVo, 0, len(groupApp))
+	for groupName, v := range groupApp {
+		groupInfo := GroupAppVo{
+			Label: groupName,
+			Value: groupName,
+		}
+		children := make([]GroupAppVo, 0, len(v))
+		for appName, _ := range v {
+			appNameInfo := GroupAppVo{
+				Label: appName,
+				Value: appName,
+			}
+			children = append(children, appNameInfo)
+		}
+		groupInfo.Children = children
+		groupAppList = append(groupAppList, groupInfo)
+	}
+	succ(c, "", groupAppList)
 }

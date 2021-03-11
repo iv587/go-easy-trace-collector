@@ -40,3 +40,7 @@ vendor/
 *.sln
 *.sw?
 easycboot
+
+# web
+**/node_modules
+**//dist
