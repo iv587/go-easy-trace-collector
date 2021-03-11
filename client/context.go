@@ -1,4 +1,4 @@
-package connection
+package client
 
 import (
 	"bufio"
@@ -36,7 +36,7 @@ type Context struct {
 		Kb int
 		By int
 	}
-	App App
+	AppInfo AppInfo
 }
 
 // 创建链接上下文
@@ -72,14 +72,14 @@ func (c *Context) close() {
 	removeContext(c)
 }
 
-func handleRecv(c *Context, msg span.Msg) error {
-	if msg.Type == span.TYPE_HEARTBEAT {
+func handleRecv(c *Context, packet Packet) error {
+	if packet.Type == typeHeartbeat {
 		var heartBeat easytrace.HeartBeatReq
-		proto.Unmarshal(msg.Body, &heartBeat)
-		c.App.Name = heartBeat.AppName
-		c.App.Group = heartBeat.GroupName
+		proto.Unmarshal(packet.Body, &heartBeat)
+		c.AppInfo.Name = heartBeat.AppName
+		c.AppInfo.Group = heartBeat.GroupName
 	} else {
-		span.Process(msg)
+		span.Process(packet.Body)
 	}
 	return nil
 }
@@ -93,7 +93,7 @@ func (c *Context) recvData() {
 	cache := false
 	bBuff := bytes.NewBuffer(nil)
 	cBuff := bytes.NewBuffer(nil)
-	msgBodyList := make([]span.Msg, 0, 10)
+	msgBodyList := make([]Packet, 0, 10)
 	for c.running {
 		n, err := r.Read(body)
 		c.conn.Write(pongBytes)
@@ -124,7 +124,7 @@ func (c *Context) recvData() {
 	}
 }
 
-func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, msgBodyList *[]span.Msg) (bool, int, int32) {
+func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, msgBodyList *[]Packet) (bool, int, int32) {
 	cBuff.Reset()
 	bodyLen := len
 	cache := false
@@ -134,7 +134,7 @@ func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, 
 		if bodyLen <= 0 {
 			if bBuff.Len() >= 8 {
 				binary.Read(bytes.NewReader(bBuff.Next(4)), binary.BigEndian, &msgSign)
-				if msgSign != span.TYPE_HEARTBEAT && msgSign != span.TYPE_SPAN && msgSign != span.TYPE_HEARTBEAT_RES {
+				if msgSign != typeSpan && msgSign != typeHeartbeat && msgSign != typeHeartbeatRes {
 					continue
 				}
 				var lenTmp int32
@@ -148,7 +148,7 @@ func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, 
 		} else {
 			if bBuff.Len() >= bodyLen {
 				msgBody := bBuff.Next(bodyLen)
-				*msgBodyList = append(*msgBodyList, span.Msg{Type: oldmsgSign, Body: msgBody})
+				*msgBodyList = append(*msgBodyList, Packet{Type: oldmsgSign, Body: msgBody})
 				index++
 				bodyLen = 0
 				oldmsgSign = 0
