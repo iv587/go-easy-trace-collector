@@ -3,7 +3,6 @@ package span
 import (
 	"collector/db"
 	"errors"
-	"fmt"
 	"github.com/go-xorm/xorm"
 	"time"
 )
@@ -53,7 +52,6 @@ func ListPage(query Query) (Page, error) {
 		List:        list,
 		CurrentPage: query.PageNo,
 	}
-	fmt.Println(pageRes)
 	return pageRes, nil
 }
 
@@ -81,7 +79,6 @@ func wrapSessionQuery(query Query) *xorm.Session {
 
 func TraceTree(traceId string) (TreeNode, error) {
 	var list []EasySpanDO
-	fmt.Println(traceId)
 	err := db.GetEngine().Table("easy_span").Where("trace_id=?", traceId).Asc("start_time").Find(&list)
 	if err != nil {
 		return TreeNode{}, err
@@ -137,7 +134,7 @@ func parseTreeNode(it EasySpanDO) TreeNode {
 		ElapsedTime:    it.FinishTime - it.StartTime,
 		Children:       emptySpanNode,
 		ShowChildren:   true,
-		StartTimeText:  time.Unix(startSec, startNSec).Format(timeFmt),
+		StartTimeText:  time.Unix(startSec, startNSec).Local().Format(timeFmt),
 		FinishTimeText: time.Unix(finishSec, finishNSec).Format(timeFmt),
 	}
 	tree.OperationName = it.OperationName
@@ -158,11 +155,9 @@ func Get(id int64) (EasySpanDO, error) {
 	session = session.Where("id=?", id)
 	err := session.Find(&list)
 	if err != nil {
-		fmt.Println("1111")
 		return EasySpanDO{}, err
 	}
 	if len(list) <= 0 {
-		fmt.Println("2222")
 		return EasySpanDO{}, errors.New("记录不存在")
 	}
 	return list[0], nil

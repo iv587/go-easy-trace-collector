@@ -42,6 +42,10 @@ func GroupApp() map[string]map[string]int {
 	return app
 }
 
+func ConnectList() map[string]Context {
+	return cloneConnection()
+}
+
 func cloneConnection() map[string]Context {
 	clientMap.RLock()
 	clientMap.RUnlock()
@@ -49,8 +53,8 @@ func cloneConnection() map[string]Context {
 	cloneCtx := make(map[string]Context)
 	for k, v := range contexts {
 		clon := Context{
-			time:      v.time,
-			alive:     v.alive,
+			Time:      v.Time,
+			Alive:     v.Alive,
 			ReadBytes: v.ReadBytes,
 			AppInfo:   v.AppInfo,
 		}
