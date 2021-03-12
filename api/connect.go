@@ -29,7 +29,7 @@ func (t *connect) list(c *gin.Context) {
 		list = append(list, cVo)
 	}
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].CreateTimeStamp.After(list[j].CreateTimeStamp)
+		return list[i].CreateTimeStamp.Before(list[j].CreateTimeStamp)
 	})
 	succ(c, "", gin.H{
 		"list": list,

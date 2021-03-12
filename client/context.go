@@ -6,7 +6,6 @@ import (
 	"collector/easytrace"
 	"collector/span"
 	"encoding/binary"
-	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"sync"
@@ -78,9 +77,10 @@ func handleRecv(c *Context, packet Packet) error {
 		c.AppInfo.Name = heartBeat.AppName
 		c.AppInfo.Group = heartBeat.GroupName
 		c.AppInfo.StartTime = heartBeat.TimeStamp
-		fmt.Println(heartBeat)
 	} else {
-		span.Process(packet.Body)
+		body := make([]byte, len(packet.Body))
+		copy(body, packet.Body)
+		go span.Process(body)
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func handleRecv(c *Context, packet Packet) error {
 func (c *Context) recvData() {
 	defer c.close()
 	r := bufio.NewReader(c.conn)
-	body := make([]byte, 1024)
+	body := make([]byte, 2*1024*1024)
 	bodyLen := 0
 	var msgType int32 = 0
 	cache := false
