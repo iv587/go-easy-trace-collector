@@ -6,6 +6,7 @@ import (
 	"collector/easytrace"
 	"collector/span"
 	"encoding/binary"
+	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"sync"
@@ -77,6 +78,7 @@ func handleRecv(c *Context, packet Packet) error {
 		c.AppInfo.Name = heartBeat.AppName
 		c.AppInfo.Group = heartBeat.GroupName
 		c.AppInfo.StartTime = heartBeat.TimeStamp
+		fmt.Println(heartBeat)
 	} else {
 		body := make([]byte, len(packet.Body))
 		copy(body, packet.Body)
@@ -102,6 +104,7 @@ func (c *Context) recvData() {
 		}
 		c.Alive = time.Now()
 		if n > 0 {
+			fmt.Println("接受", n)
 			// 记录流量
 			c.countReadBytes(n)
 			msgBodyList = msgBodyList[0:0]

@@ -11,6 +11,7 @@ var routes = [
     {
         path: '/',
         component: main,
+        redirect: '/trace',
         children: [
             {
                 path: '/trace',
