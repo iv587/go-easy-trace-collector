@@ -1,5 +1,7 @@
 package api
 
+import "time"
+
 type GroupAppVo struct {
 	Label    string       `json:"label"`
 	Value    string       `json:"value"`
@@ -13,6 +15,8 @@ type ConnectInfoVo struct {
 
 	// 链接建立时间
 	CreateTime string `json:"createTime"`
+
+	CreateTimeStamp time.Time
 
 	// 链接存活时间
 	AliveTime string `json:"aliveTime"`

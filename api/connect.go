@@ -4,6 +4,7 @@ import (
 	"collector/client"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"sort"
 	"time"
 )
 
@@ -27,6 +28,9 @@ func (t *connect) list(c *gin.Context) {
 		}
 		list = append(list, cVo)
 	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].CreateTimeStamp.After(list[j].CreateTimeStamp)
+	})
 	succ(c, "", gin.H{
 		"list": list,
 	})
