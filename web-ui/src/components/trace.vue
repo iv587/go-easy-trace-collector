@@ -39,7 +39,7 @@
                     <Form :model="search">
                         <i-col span="6">
                             <FormItem label="选择日期">
-                                <DatePicker @on-change="searchDateHandler" :value="new Date()"
+                                <DatePicker @on-change="searchDateHandler" :value="searchTime"
                                             format="yyyy-MM-dd" type="date" :clearable="false"
                                             placeholder="选择日期" style="width: 200px"></DatePicker>
                             </FormItem>
@@ -130,8 +130,9 @@ export default {
                 size: 10,
                 day: '',
                 total: 0,
-                operationKey: ''
+                operationKey: '',
             },
+            searchTime: new Date(),
             spanInfo: {},
             drawerOpen: false,
             appData: [],
