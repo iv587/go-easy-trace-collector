@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -29,7 +30,15 @@ func (t *connect) list(c *gin.Context) {
 		list = append(list, cVo)
 	}
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].CreateTimeStamp.Before(list[j].CreateTimeStamp)
+		groupCom := strings.Compare(list[i].AppGroup, list[j].AppGroup)
+		if groupCom == 0 {
+			appCom := strings.Compare(list[i].AppName, list[j].AppName)
+			if appCom == 0 {
+				return list[i].CreateTimeStamp.Before(list[j].CreateTimeStamp)
+			}
+			return appCom > 0
+		}
+		return groupCom > 0
 	})
 	succ(c, "", gin.H{
 		"list": list,
