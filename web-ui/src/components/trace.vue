@@ -78,7 +78,7 @@
                 </div>
                 <div style="height: calc(100vh - 240px) ; overflow-y: auto ;">
                     <div :ref="item.id+'div'" class="trace-div-cls" v-for="item in traceList" :key="item.id"
-                         @click="getTraceTree(item.traceId,item.id)">
+                         @click="getTraceTree(item.id, item.startTime)">
                         <Card :ref="item.id+'-card'">
                             <p class="span-operation-p-cls">
                                 <a href="javascript:void(0)" @click="getTraceTree(item.traceId)"
@@ -260,7 +260,7 @@ export default {
     methods: {
         rowClick(row) {
             let _this = this;
-            getSpanByIdApi({id: row.id}).then(res => {
+            getSpanByIdApi({id: row.id, startTime: row.startTime}).then(res => {
                 _this.spanInfo = res.data
                 _this.spanInfo.tagObj = JSON.parse(res.data.tags)
                 _this.spanInfo.logArray = JSON.parse(res.data.logDatas)
@@ -303,16 +303,16 @@ export default {
                 });
                 if (_this.traceList.length > 0) {
                     _this.$nextTick(function () {
-                        _this.getTraceTree(_this.traceList[0].traceId, _this.traceList[0].id)
+                        _this.getTraceTree(_this.traceList[0].id, _this.traceList[0].startTime)
                     });
 
                 }
             });
         },
-        getTraceTree(traceId) {
+        getTraceTree(id, startTime) {
             let _this = this;
             this.loading = true;
-            getTraceTreeApi({traceId}).then(res => {
+            getTraceTreeApi({id, startTime}).then(res => {
                 _this.rootStartTime = res.data.startTime;
                 _this.rootElapsedTime = res.data.elapsedTime;
                 _this.traceData = [res.data]
