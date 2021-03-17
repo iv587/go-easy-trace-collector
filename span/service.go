@@ -3,7 +3,10 @@ package span
 import (
 	"collector/db"
 	"errors"
+	"fmt"
 	"github.com/go-xorm/xorm"
+	"log"
+	"strings"
 	"time"
 )
 
@@ -20,13 +23,15 @@ func ListPage(query Query) (Page, error) {
 			return Page{}, err
 		}
 		startTime = dayStart.Unix() * 1000
+		query.time = now
 	} else {
-		date, err := time.Parse("2006-01-02 15:04:05", query.Day+" 00:00:00")
+		date1, err := time.Parse("2006-01-02 15:04:05", query.Day+" 00:00:00")
+		query.time = date1
 		if err != nil {
 			return Page{}, err
 		}
-		startTime = date.Unix() * 1000
-		date, err = time.Parse("2006-01-02 15:04:05", query.Day+" 23:59:59")
+		startTime = date1.Unix() * 1000
+		date, err := time.Parse("2006-01-02 15:04:05", query.Day+" 23:59:59")
 		if err != nil {
 			return Page{}, err
 		}
@@ -56,7 +61,7 @@ func ListPage(query Query) (Page, error) {
 }
 
 func wrapSessionQuery(query Query) *xorm.Session {
-	session := db.GetEngine().Table("easy_span")
+	session := db.GetEngine().Table(getEasySpanTableName(query.time))
 	session = session.Where("span_kind = ?", "server")
 	if query.startTime > 0 && query.endTime > 0 {
 		session.And(" start_time >= ? and start_time < ?", query.startTime, query.endTime)
@@ -77,9 +82,13 @@ func wrapSessionQuery(query Query) *xorm.Session {
 	return session
 }
 
-func TraceTree(traceId string) (TreeNode, error) {
+func TraceTree(id int64, time time.Time) (TreeNode, error) {
+	po, err := Get(id, time)
+	if err != nil {
+		return TreeNode{}, err
+	}
 	var list []EasySpanDO
-	err := db.GetEngine().Table("easy_span").Where("trace_id=?", traceId).Asc("start_time").Find(&list)
+	err = db.GetEngine().Table(getEasySpanTableName(time)).Where("trace_id=?", po.TraceId).Asc("start_time").Find(&list)
 	if err != nil {
 		return TreeNode{}, err
 	}
@@ -149,9 +158,9 @@ func parseTreeNode(it EasySpanDO) TreeNode {
 	return tree
 }
 
-func Get(id int64) (EasySpanDO, error) {
+func Get(id int64, time time.Time) (EasySpanDO, error) {
 	var list []EasySpanDO
-	session := db.GetEngine().Table("easy_span")
+	session := db.GetEngine().Table(getEasySpanTableName(time))
 	session = session.Where("id=?", id)
 	err := session.Find(&list)
 	if err != nil {
@@ -162,4 +171,41 @@ func Get(id int64) (EasySpanDO, error) {
 	}
 	return list[0], nil
 
+}
+
+func getEasySpanTableName(time time.Time) string {
+	dateStr := time.Format("20060102")
+	tableName := fmt.Sprintf("easy_span_%s", dateStr)
+	return tableName
+}
+
+func createTable() {
+	log.Println("easy_span创建开始")
+	defer log.Println("easy_span创建完成")
+	tableName := getEasySpanTableName(time.Now().Add(24 * time.Hour))
+	res, err := db.GetEngine().Exec("DROP table  if exists " + tableName)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println(res.RowsAffected())
+
+	sql := strings.Replace(tableCreateSql, "{TABLE_NAME}", tableName, -1)
+	res, err = db.GetEngine().Exec(sql)
+	if err != nil {
+		log.Print(err)
+		return
+	}
+	log.Println(res.RowsAffected())
+}
+
+func PreCreateTable() {
+	d := time.Hour
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	for {
+		<-timer.C
+		createTable()
+		timer.Reset(d)
+	}
 }
