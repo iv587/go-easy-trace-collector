@@ -18,20 +18,20 @@ func ListPage(query Query) (Page, error) {
 		endTime = now.Unix() * 1000
 		startTimeStr := now.Format("2006-01-02")
 		startTimeStr = startTimeStr + " 00:00:00"
-		dayStart, err := time.Parse("2006-01-02 15:04:05", startTimeStr)
+		dayStart, err := time.ParseInLocation("2006-01-02 15:04:05", startTimeStr, time.Local)
 		if err != nil {
 			return Page{}, err
 		}
 		startTime = dayStart.Unix() * 1000
 		query.time = now
 	} else {
-		date1, err := time.Parse("2006-01-02 15:04:05", query.Day+" 00:00:00")
+		date1, err := time.ParseInLocation("2006-01-02 15:04:05", query.Day+" 00:00:00", time.Local)
 		query.time = date1
 		if err != nil {
 			return Page{}, err
 		}
 		startTime = date1.Unix() * 1000
-		date, err := time.Parse("2006-01-02 15:04:05", query.Day+" 23:59:59")
+		date, err := time.ParseInLocation("2006-01-02 15:04:05", query.Day+" 23:59:59", time.Local)
 		if err != nil {
 			return Page{}, err
 		}
@@ -39,6 +39,7 @@ func ListPage(query Query) (Page, error) {
 	}
 	query.startTime = startTime
 	query.endTime = endTime
+	fmt.Printf("tableName %s, start %s, end %s", getEasySpanTableName(query.time), startTime, endTime)
 	session := wrapSessionQuery(query)
 	count, err := session.Count()
 	if err != nil {
