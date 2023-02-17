@@ -14,4 +14,5 @@ func Route(router *gin.Engine) {
 	apiGroup.Any("trace/tree", trace.tree)
 	apiGroup.Any("trace/getSpanById", trace.getSpanById)
 	apiGroup.Any("trace/getApp", trace.getApp)
+	apiGroup.Any("connect/list", pConnect.list)
 }
