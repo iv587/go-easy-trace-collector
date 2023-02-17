@@ -5,6 +5,7 @@ import (
 	"collector/db"
 	"collector/http"
 	"collector/server"
+	"collector/span"
 )
 
 func Start() error {
@@ -15,6 +16,8 @@ func Start() error {
 	}
 	// 启动数据
 	err = db.Boot()
+	// 启动创建表定时任务
+	go span.PreCreateTable()
 	if err != nil {
 		return err
 	}

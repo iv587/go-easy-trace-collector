@@ -23,9 +23,9 @@ type Context struct {
 	// 原生链接
 	conn net.Conn
 	// 链接时间
-	time time.Time
+	Time time.Time
 	// 存活时间
-	alive time.Time
+	Alive time.Time
 	// 事件
 	running bool
 
@@ -43,8 +43,8 @@ type Context struct {
 func Create(conn net.Conn) {
 	ctx := &Context{
 		conn:    conn,
-		time:    time.Now(),
-		alive:   time.Now(),
+		Time:    time.Now(),
+		Alive:   time.Now(),
 		running: true,
 	}
 	ctx.start()
@@ -60,13 +60,12 @@ func (c *Context) start() {
 func (c *Context) Write(msg []byte) (int, error) {
 	n, err := c.conn.Write(msg)
 	if err == nil {
-		c.alive = time.Now()
+		c.Alive = time.Now()
 	}
 	return n, err
 }
 
 func (c *Context) close() {
-	defer fmt.Println("关闭连接")
 	c.conn.Close()
 	c.running = false
 	removeContext(c)
@@ -78,8 +77,12 @@ func handleRecv(c *Context, packet Packet) error {
 		proto.Unmarshal(packet.Body, &heartBeat)
 		c.AppInfo.Name = heartBeat.AppName
 		c.AppInfo.Group = heartBeat.GroupName
+		c.AppInfo.StartTime = heartBeat.TimeStamp
+		fmt.Println(heartBeat)
 	} else {
-		span.Process(packet.Body)
+		body := make([]byte, len(packet.Body))
+		copy(body, packet.Body)
+		go span.Process(body)
 	}
 	return nil
 }
@@ -87,7 +90,7 @@ func handleRecv(c *Context, packet Packet) error {
 func (c *Context) recvData() {
 	defer c.close()
 	r := bufio.NewReader(c.conn)
-	body := make([]byte, 1024)
+	body := make([]byte, 2*1024*1024)
 	bodyLen := 0
 	var msgType int32 = 0
 	cache := false
@@ -96,12 +99,12 @@ func (c *Context) recvData() {
 	msgBodyList := make([]Packet, 0, 10)
 	for c.running {
 		n, err := r.Read(body)
-		c.conn.Write(pongBytes)
 		if err != nil {
 			return
 		}
-		c.alive = time.Now()
+		c.Alive = time.Now()
 		if n > 0 {
+			fmt.Println("接受", n)
 			// 记录流量
 			c.countReadBytes(n)
 			msgBodyList = msgBodyList[0:0]
@@ -137,6 +140,7 @@ func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, 
 				if msgSign != typeSpan && msgSign != typeHeartbeat && msgSign != typeHeartbeatRes {
 					continue
 				}
+				oldmsgSign = msgSign
 				var lenTmp int32
 				binary.Read(bytes.NewReader(bBuff.Next(4)), binary.BigEndian, &lenTmp)
 				bodyLen = int(lenTmp)
@@ -151,7 +155,7 @@ func (c *Context) decode(bBuff, cBuff *bytes.Buffer, len int, oldmsgSign int32, 
 				*msgBodyList = append(*msgBodyList, Packet{Type: oldmsgSign, Body: msgBody})
 				index++
 				bodyLen = 0
-				oldmsgSign = 0
+				msgSign = 0
 			} else {
 				cBuff.Write(bBuff.Next(bBuff.Len()))
 				cache = true
@@ -167,7 +171,7 @@ func (c *Context) aliveCheck() {
 	defer ticker.Stop()
 	for c.running {
 		time := <-ticker.C
-		timeOut := time.Sub(c.alive)
+		timeOut := time.Sub(c.Alive)
 		if timeOut > timeMaxOut {
 			c.close()
 		}
@@ -178,17 +182,17 @@ func (c *Context) countReadBytes(n int) {
 	c.ReadBytes.Lock()
 	defer c.ReadBytes.Unlock()
 	c.ReadBytes.By = c.ReadBytes.By + n
-	if c.ReadBytes.By > 1024 {
+	if c.ReadBytes.By >= 1000 {
 		count, mod := convertByte(c.ReadBytes.By)
 		c.ReadBytes.Kb = c.ReadBytes.Kb + count
 		c.ReadBytes.By = mod
 	}
-	if c.ReadBytes.Kb > 1024 {
+	if c.ReadBytes.Kb >= 1000 {
 		count, mod := convertByte(c.ReadBytes.Kb)
 		c.ReadBytes.Mb = c.ReadBytes.Mb + count
 		c.ReadBytes.Kb = mod
 	}
-	if c.ReadBytes.Mb > 1024 {
+	if c.ReadBytes.Mb >= 1000 {
 		count, mod := convertByte(c.ReadBytes.Mb)
 		c.ReadBytes.Gb = c.ReadBytes.Gb + count
 		c.ReadBytes.Mb = mod
@@ -196,8 +200,7 @@ func (c *Context) countReadBytes(n int) {
 }
 
 func convertByte(bNum int) (int, int) {
-	detal := bNum - 1204
-	count := detal / 1024
-	mod := detal % 1024
+	count := bNum / 1000
+	mod := bNum % 1000
 	return count, mod
 }

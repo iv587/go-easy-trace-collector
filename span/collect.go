@@ -4,6 +4,7 @@ import (
 	"collector/db"
 	"collector/easytrace"
 	"github.com/golang/protobuf/proto"
+	"time"
 )
 
 func buildSpan(bSpan []byte) (easytrace.EasySpan, error) {
@@ -40,7 +41,8 @@ func Process(body []byte) {
 		AppInstance:      span.AppInstance,
 		Component:        span.Component,
 	}
-	_, err = db.GetEngine().Table("easy_span").Insert(&do)
+	time1 := time.Unix(do.StartTime/1000, 0)
+	_, err = db.GetEngine().Table(getEasySpanTableName(time1)).Insert(&do)
 	if err != nil {
 		return
 	}

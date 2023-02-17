@@ -1,5 +1,7 @@
 package span
 
+import "time"
+
 type Query struct {
 	Application      string `form:"application"`
 	ApplicationGroup string `form:"applicationGroup"`
@@ -12,4 +14,5 @@ type Query struct {
 	OperationKey     string `form:"operationKey"`
 	startTime        int64
 	endTime          int64
+	time             time.Time
 }

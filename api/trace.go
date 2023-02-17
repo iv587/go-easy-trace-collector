@@ -5,6 +5,7 @@ import (
 	"collector/span"
 	"github.com/gin-gonic/gin"
 	"strconv"
+	"time"
 )
 
 var trace = new(Trace)
@@ -27,8 +28,17 @@ func (t *Trace) list(c *gin.Context) {
 }
 
 func (t *Trace) tree(c *gin.Context) {
-	traceId := c.PostForm("traceId")
-	node, err := span.TraceTree(traceId)
+	idStr := c.PostForm("id")
+	startTimeStr := c.PostForm("startTime")
+	startTime, err := strconv.ParseInt(startTimeStr, 10, 64)
+	if err != nil {
+		panic(err)
+	}
+	id, err := strconv.ParseInt(idStr, 0, 64)
+	if err != nil {
+		panic(err)
+	}
+	node, err := span.TraceTree(id, time.Unix(startTime/1000, 0))
 	if err != nil {
 		panic(err)
 	}
@@ -37,11 +47,16 @@ func (t *Trace) tree(c *gin.Context) {
 
 func (t *Trace) getSpanById(c *gin.Context) {
 	idStr := c.PostForm("id")
+	startTimeStr := c.PostForm("startTime")
+	startTime, err := strconv.ParseInt(startTimeStr, 10, 64)
+	if err != nil {
+		panic(err)
+	}
 	id, err := strconv.ParseInt(idStr, 0, 64)
 	if err != nil {
 		panic(err)
 	}
-	span, err := span.Get(id)
+	span, err := span.Get(id, time.Unix(startTime/1000, 0))
 	if err != nil {
 		panic(err)
 	}
