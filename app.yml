@@ -4,3 +4,6 @@ collector:
   addr: ":6666"
 mysql:
   addr: "root:759ce694b4@tcp(192.168.9.150:3306)/easyapm?charset=utf8"
+user:
+  name: 'test'
+  password: '123456'

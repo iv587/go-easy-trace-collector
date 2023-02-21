@@ -1,7 +1,9 @@
 package api
 
 import (
+	"collector/auth"
 	"collector/client"
+	"collector/config"
 	"collector/span"
 	"github.com/gin-gonic/gin"
 	"strconv"
@@ -11,6 +13,16 @@ import (
 var trace = new(Trace)
 
 type Trace struct {
+}
+
+func (t *Trace) Login(c *gin.Context) {
+	userName := c.PostForm("userName")
+	password := c.PostForm("password")
+	if userName == config.User.Name && password == config.User.Password {
+		succ(c, "", gin.H{
+			"token": auth.Token(userName, password),
+		})
+	}
 }
 
 func (t *Trace) list(c *gin.Context) {

@@ -24,5 +24,11 @@ export const listAppConn = (data: any) => {
   }>(base.GET_CONN_URL, data);
 };
 
+export const loginApi = (data: any) => {
+  return httpClient.post<{
+    token: string
+  }>(base.LOGIN_URL, data);
+};
+
 
 

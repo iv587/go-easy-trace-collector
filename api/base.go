@@ -16,3 +16,10 @@ func error(c *gin.Context, msg string) {
 		"msg":  msg,
 	})
 }
+
+func notLogin(c *gin.Context, msg string) {
+	c.JSON(200, gin.H{
+		"code": 3,
+		"msg":  msg,
+	})
+}
