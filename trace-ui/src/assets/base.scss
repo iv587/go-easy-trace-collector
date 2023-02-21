@@ -1,0 +1,22 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+}
+
+// 撑满父容器
+.es {
+  &-fill{
+    width: 100%;
+    height: 100%;
+  }
+  &-all-0{
+    margin: 0;
+    padding: 0;
+  }
+}

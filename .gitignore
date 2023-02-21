@@ -44,3 +44,4 @@ easycboot
 # web
 **/node_modules
 **//dist
+static/*
