@@ -1,6 +1,7 @@
 package span
 
 import (
+	"collector/config"
 	"collector/db"
 	"errors"
 	"fmt"
@@ -46,7 +47,7 @@ func ListPage(query Query) (Page, error) {
 		return Page{}, err
 	}
 	var list []EasySpanDO
-	err = wrapSessionQuery(query).Limit(query.Size, (query.PageNo-1)*query.Size).Find(&list)
+	err = wrapSessionQuery(query).Omit("log_datas", "tags").Limit(query.Size, (query.PageNo-1)*query.Size).Find(&list)
 	if err != nil {
 		return Page{}, err
 	}
@@ -89,7 +90,7 @@ func TraceTree(id int64, time time.Time) (TreeNode, error) {
 		return TreeNode{}, err
 	}
 	var list []EasySpanDO
-	err = db.GetEngine().Table(getEasySpanTableName(time)).Where("trace_id=?", po.TraceId).Asc("start_time").Find(&list)
+	err = db.GetEngine().Table(getEasySpanTableName(time)).Where("trace_id=?", po.TraceId).Omit("log_datas", "tags").Asc("start_time").Find(&list)
 	if err != nil {
 		return TreeNode{}, err
 	}
@@ -200,13 +201,45 @@ func createTable() {
 	log.Println(res.RowsAffected())
 }
 
+func dropOldTable() {
+	tableName := getEasySpanTableName(time.Now().Add(time.Hour * time.Duration(-1*24*config.Mysql.CleanInterval)))
+	res, err := db.GetEngine().Query("select table_name from information_schema.tables where table_schema='easyapm' and table_name like 'easy_span_%' and table_name < ? ", tableName)
+	if err == nil {
+		for _, re := range res {
+			oldTable := string(re["table_name"])
+			err := db.GetEngine().DropTables(oldTable)
+			fmt.Println("删除表", oldTable, "err:", err)
+		}
+	}
+}
+
+// 删除ping这些无用数据
+func deletePingSpan() {
+	tableName := getEasySpanTableName(time.Now())
+	db.GetEngine().Exec("DELETE from " + tableName + " where operation_name like '%/ping'")
+}
+
 func PreCreateTable() {
 	d := time.Hour
 	timer := time.NewTimer(d)
 	defer timer.Stop()
 	for {
 		<-timer.C
+		// 创建表
 		createTable()
+		// 删除表
+		dropOldTable()
+		timer.Reset(d)
+	}
+}
+
+func DeleteUnUseData() {
+	d := time.Minute
+	timer := time.NewTimer(d)
+	defer timer.Stop()
+	for {
+		<-timer.C
+		deletePingSpan()
 		timer.Reset(d)
 	}
 }

@@ -3,7 +3,8 @@ http:
 collector:
   addr: ":6666"
 mysql:
-  addr: "root:759ce694b4@tcp(192.168.9.150:3306)/easyapm?charset=utf8"
+  addr: "root:759ce694b4@tcp(47.52.78.196:3306)/easyapm?charset=utf8"
+  cleanInterval: 10
 user:
   name: 'test'
   password: '123456'

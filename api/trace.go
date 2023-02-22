@@ -19,8 +19,13 @@ func (t *Trace) Login(c *gin.Context) {
 	userName := c.PostForm("userName")
 	password := c.PostForm("password")
 	if userName == config.User.Name && password == config.User.Password {
+		token, err := auth.Token(userName, password)
+		if err != nil {
+			error(c, err.Error())
+			return
+		}
 		succ(c, "", gin.H{
-			"token": auth.Token(userName, password),
+			"token": token,
 		})
 	}
 }

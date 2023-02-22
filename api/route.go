@@ -28,7 +28,7 @@ var checkAuth = func(context *gin.Context) {
 	token := context.PostForm("token")
 	ok, err := auth.Verify(token)
 	if err != nil {
-		error(context, "用户信息校验失败")
+		notLogin(context, "用户信息校验失败")
 		context.Abort()
 		return
 	}

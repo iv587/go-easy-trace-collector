@@ -3,6 +3,7 @@ import type {AxiosRequestConfig} from 'axios/index';
 import type {ApiRes} from '@/utils/type';
 // @ts-ignore
 import qs from 'qs'
+import auth from '@/utils/auth';
 
 
 
@@ -25,9 +26,9 @@ class ApiError extends Error {
 class ApiHttpClient {
 
     async post<T>(url: string, data: any, customerErrHandler?: boolean, customerLogin?: boolean) {
-        //const token = auth.getToken()
+        const token = auth.getToken()
         const tokenObj = {
-           // token: token
+            token: token
         }
         let reqData: any = {
             ...tokenObj,

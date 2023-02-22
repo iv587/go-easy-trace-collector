@@ -6,8 +6,7 @@ const TOKEN_KEY = "token"
 class TokenUtils {
 
   getToken() {
-    // return Cookies.get(TOKEN_KEY)
-    return 'hello'
+    return Cookies.get(TOKEN_KEY)
   }
 
   setToken(token: string) {

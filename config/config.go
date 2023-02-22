@@ -3,13 +3,15 @@ package config
 import (
 	"github.com/spf13/viper"
 	"os"
+	"strconv"
 )
 
 type config struct {
 }
 
 var Mysql = struct {
-	Addr string
+	Addr          string
+	CleanInterval int64
 }{}
 
 var Http = struct {
@@ -34,6 +36,7 @@ func Load() error {
 		return err
 	}
 	Mysql.Addr = viper.GetString("mysql.addr")
+	Mysql.CleanInterval = viper.GetInt64("mysql.cleanInterval")
 	Http.Addr = viper.GetString("http.addr")
 	Collector.Addr = viper.GetString("collector.addr")
 	User.Name = viper.GetString("user.name")
@@ -57,6 +60,14 @@ func Load() error {
 	val = os.Getenv("USER_PASSWORD")
 	if val != "" {
 		User.Password = val
+	}
+	val = os.Getenv("DATA_EXPIRE_DAY")
+	if val != "" {
+		cleanInterval, err := strconv.ParseInt(val, 10, 64)
+		if err == nil {
+			Mysql.CleanInterval = cleanInterval
+		}
+
 	}
 	return nil
 

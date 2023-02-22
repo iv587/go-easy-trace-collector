@@ -18,6 +18,7 @@ func Start() error {
 	err = db.Boot()
 	// 启动创建表定时任务
 	go span.PreCreateTable()
+	go span.DeleteUnUseData()
 	if err != nil {
 		return err
 	}
